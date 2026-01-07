@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Obiettivi di Gennaio</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    h2 {
+      color: #333;
+    }
+    .goal {
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    .goal input {
+      margin-right: 10px;
+      transform: scale(1.2);
+    }
+    .completed {
+      text-decoration: line-through;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+
+<h2>🎯 Obiettivi di Gennaio</h2>
+
+<div class="goal">
+  <input type="checkbox" id="goal1">
+  <label for="goal1">Studiare Data Science / AI</label>
+</div>
+
+<div class="goal">
+  <input type="checkbox" id="goal2">
+  <label for="goal2">Iscrivermi in palestra</label>
+</div>
+
+<div class="goal">
+  <input type="checkbox" id="goal3">
+  <label for="goal3">Continuare la psicoterapia</label>
+</div>
+
+<div class="goal">
+  <input type="checkbox" id="goal4">
+  <label for="goal4">Tempo di qualità con il mio compagno ogni settimana</label>
+</div>
+
+<div class="goal">
+  <input type="checkbox" id="goal5">
+  <label for="goal5">Iniziare a studiare il Manuale del Master</label>
+</div>
+
+<div class="goal">
+  <input type="checkbox" id="goal5">
+  <label for="goal6">Masterare una sessione di D&D</label>
+</div>
+
+<!-- Form per aggiungere nuove voci -->
+<div id="new-goal-form">
+  <input type="text" id="new-goal-text" placeholder="Aggiungi nuovo obiettivo">
+  <button onclick="addGoal()">Aggiungi</button>
+</div>
+
+<script>
+  const goalList = document.getElementById('goal-list');
+
+  // Funzione per inizializzare checkbox già salvate
+  function initCheckboxes() {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+      const saved = localStorage.getItem(cb.id);
+      if (saved === "true") {
+        cb.checked = true;
+        cb.nextElementSibling.classList.add("completed");
+      }
+      cb.addEventListener('change', () => {
+        localStorage.setItem(cb.id, cb.checked);
+        cb.nextElementSibling.classList.toggle("completed");
+      });
+    });
+  }
+
+  initCheckboxes();
+
+  // Funzione per aggiungere una nuova voce
+  function addGoal() {
+    const textInput = document.getElementById('new-goal-text');
+    const text = textInput.value.trim();
+    if (text === "") return;
+
+    // Genera ID unico
+    const newId = 'apr-new-' + Date.now();
+
+    // Crea div
+    const div = document.createElement('div');
+    div.className = 'goal';
+    div.innerHTML = `
+      <input type="checkbox" id="${newId}">
+      <label for="${newId}">${text}</label>
+    `;
+
+    goalList.appendChild(div);
+    textInput.value = '';
+
+    // Aggiunge evento e salva nel localStorage
+    const checkbox = div.querySelector('input[type="checkbox"]');
+    checkbox.addEventListener('change', () => {
+      localStorage.setItem(checkbox.id, checkbox.checked);
+      checkbox.nextElementSibling.classList.toggle("completed");
+    });
+
+    // Salva la voce anche come “nuova” nel localStorage per futura persistenza
+    let newGoals = JSON.parse(localStorage.getItem('apr-new-goals') || "[]");
+    newGoals.push({id: newId, text: text});
+    localStorage.setItem('apr-new-goals', JSON.stringify(newGoals));
+  }
+
+  // Carica eventuali voci aggiunte in precedenza
+  window.addEventListener('load', () => {
+    const newGoals = JSON.parse(localStorage.getItem('apr-new-goals') || "[]");
+    newGoals.forEach(g => {
+      const div = document.createElement('div');
+      div.className = 'goal';
+      div.innerHTML = `<input type="checkbox" id="${g.id}"><label for="${g.id}">${g.text}</label>`;
+      goalList.appendChild(div);
+
+      const checkbox = div.querySelector('input[type="checkbox"]');
+      const saved = localStorage.getItem(checkbox.id);
+      if (saved === "true") {
+        checkbox.checked = true;
+        checkbox.nextElementSibling.classList.add("completed");
+      }
+      checkbox.addEventListener('change', () => {
+        localStorage.setItem(checkbox.id, checkbox.checked);
+        checkbox.nextElementSibling.classList.toggle("completed");
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

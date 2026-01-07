@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Agenda Mensile</title>
+
+  <!-- Font Lora -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Lora', serif;
+      background: #fafafa;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    /* Progress bar */
+    .progress-container {
+      max-width: 600px;
+      margin: 0 auto 20px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .progress-bar-bg {
+      background: #e0e0e0;
+      border-radius: 10px;
+      height: 10px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .progress-bar {
+      background: #7fb3d5;
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+    }
+
+    .day-header {
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .day-header.saturday { color: #d98880; }
+    .day-header.sunday { color: #c0392b; }
+
+    .day {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 4px;
+      min-height: 85px;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .day.saturday {
+      background: #fff8f6;
+      border-color: #f0cfc9;
+    }
+
+    .day.sunday {
+      background: #fff5f5;
+      border-color: #e6b0aa;
+    }
+
+    .day.checked {
+      background: #e6f4ea;
+      border-color: #a3d3b3;
+    }
+
+    /* Evidenza OGGI */
+    .day.today {
+      border: 2px solid #7fb3d5;
+      background: #f2f8fc;
+    }
+
+    .day-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .day-number {
+      font-weight: 600;
+    }
+
+    .day-number.saturday { color: #d98880; }
+    .day-number.sunday { color: #c0392b; }
+
+    textarea {
+      resize: none;
+      flex-grow: 1;
+      font-family: 'Lora', serif;
+      font-size: 11px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 3px;
+    }
+
+    input[type="checkbox"] {
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+
+<h1 id="month-title"></h1>
+
+<div class="progress-container">
+  <div id="progress-text"></div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+</div>
+
+<div class="calendar" id="calendar"></div>
+
+<script>
+  // 🔧 CONFIG
+  const month = 3; // 0=Gennaio
+  const year = 2025;
+  const storagePrefix = "agenda-aprile-2025";
+
+  const monthNames = [
+    "Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno",
+    "Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"
+  ];
+
+  const dayNames = ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"];
+
+  document.getElementById("month-title").innerText =
+    monthNames[month] + " " + year;
+
+  const calendar = document.getElementById("calendar");
+  const progressText = document.getElementById("progress-text");
+  const progressBar = document.getElementById("progress-bar");
+
+  // Header
+  dayNames.forEach((d, i) => {
+    const h = document.createElement("div");
+    h.className = "day-header";
+    if (i === 5) h.classList.add("saturday");
+    if (i === 6) h.classList.add("sunday");
+    h.innerText = d;
+    calendar.appendChild(h);
+  });
+
+  const firstDay = new Date(year, month, 1);
+  const lastDayNum = new Date(year, month + 1, 0).getDate();
+  const offset = (firstDay.getDay() + 6) % 7;
+
+  for (let i = 0; i < offset; i++) {
+    calendar.appendChild(document.createElement("div"));
+  }
+
+  function updateProgress() {
+    let checked = 0;
+    for (let d = 1; d <= lastDayNum; d++) {
+      if (localStorage.getItem(`${storagePrefix}-check-${d}`) === "true") {
+        checked++;
+      }
+    }
+    const percent = Math.round((checked / lastDayNum) * 100);
+    progressText.innerText = `${checked} / ${lastDayNum} giorni completati`;
+    progressBar.style.width = percent + "%";
+  }
+
+  const today = new Date();
+
+  for (let day = 1; day <= lastDayNum; day++) {
+    const date = new Date(year, month, day);
+    const dow = date.getDay();
+
+    const div = document.createElement("div");
+    div.className = "day";
+    if (dow === 6) div.classList.add("saturday");
+    if (dow === 0) div.classList.add("sunday");
+
+    if (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    ) {
+      div.classList.add("today");
+    }
+
+    const top = document.createElement("div");
+    top.className = "day-top";
+
+    const num = document.createElement("div");
+    num.className = "day-number";
+    if (dow === 6) num.classList.add("saturday");
+    if (dow === 0) num.classList.add("sunday");
+    num.innerText = day;
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+
+    const textarea = document.createElement("textarea");
+    textarea.placeholder = "Note…";
+
+    const checkKey = `${storagePrefix}-check-${day}`;
+    const noteKey = `${storagePrefix}-note-${day}`;
+
+    if (localStorage.getItem(checkKey) === "true") {
+      checkbox.checked = true;
+      div.classList.add("checked");
+    }
+
+    textarea.value = localStorage.getItem(noteKey) || "";
+
+    checkbox.addEventListener("change", () => {
+      localStorage.setItem(checkKey, checkbox.checked);
+      div.classList.toggle("checked");
+      updateProgress();
+    });
+
+    textarea.addEventListener("input", () => {
+      localStorage.setItem(noteKey, textarea.value);
+    });
+
+    top.appendChild(num);
+    top.appendChild(checkbox);
+    div.appendChild(top);
+    div.appendChild(textarea);
+    calendar.appendChild(div);
+  }
+
+  updateProgress();
+</script>
+
+</body>
+</html>

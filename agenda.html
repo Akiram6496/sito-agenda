@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Agenda Mensile</title>
+
+  <!-- Font Lora -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Lora', serif;
+      background: #fafafa;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .day-header {
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .day-header.sunday {
+      color: #c0392b;
+    }
+
+    .day-header.saturday {
+      color: #d98880;
+    }
+
+    .day {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 6px;
+      min-height: 85px;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    /* Domenica */
+    .day.sunday {
+      background: #fff5f5;
+      border-color: #e6b0aa;
+    }
+
+    /* Sabato */
+    .day.saturday {
+      background: #fff8f6;
+      border-color: #f0cfc9;
+    }
+
+    .day.checked {
+      background: #e6f4ea;
+      border-color: #a3d3b3;
+    }
+
+    .day-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .day-number {
+      font-weight: 600;
+    }
+
+    .day-number.sunday {
+      color: #c0392b;
+    }
+
+    .day-number.saturday {
+      color: #d98880;
+    }
+
+    textarea {
+      resize: none;
+      flex-grow: 1;
+      font-family: 'Lora', serif;
+      font-size: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 4px;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #999;
+    }
+
+    input[type="checkbox"] {
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body>
+
+<h1 id="month-title"></h1>
+
+<div class="calendar" id="calendar"></div>
+
+<script>
+  // 🔧 CONFIGURAZIONE
+  const month = 0; // 0=Gennaio, 1=Febbraio, 2=Marzo, 3=Aprile
+  const year = 2026;
+  const storagePrefix = "agenda-aprile-2025";
+
+  const monthNames = [
+    "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
+    "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"
+  ];
+
+  const dayNames = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+
+  document.getElementById("month-title").innerText =
+    monthNames[month] + " " + year;
+
+  const calendar = document.getElementById("calendar");
+
+  // Header giorni settimana
+  dayNames.forEach((d, i) => {
+    const h = document.createElement("div");
+    h.className = "day-header";
+    if (i === 5) h.classList.add("saturday");
+    if (i === 6) h.classList.add("sunday");
+    h.innerText = d;
+    calendar.appendChild(h);
+  });
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const startOffset = (firstDay.getDay() + 6) % 7;
+
+  // Celle vuote iniziali
+  for (let i = 0; i < startOffset; i++) {
+    calendar.appendChild(document.createElement("div"));
+  }
+
+  // Giorni del mese
+  for (let day = 1; day <= lastDay; day++) {
+    const date = new Date(year, month, day);
+    const dayOfWeek = date.getDay(); // 0=Dom, 6=Sab
+
+    const isSunday = dayOfWeek === 0;
+    const isSaturday = dayOfWeek === 6;
+
+    const checkKey = `${storagePrefix}-check-${day}`;
+    const noteKey = `${storagePrefix}-note-${day}`;
+
+    const div = document.createElement("div");
+    div.className = "day";
+    if (isSunday) div.classList.add("sunday");
+    if (isSaturday) div.classList.add("saturday");
+
+    const top = document.createElement("div");
+    top.className = "day-top";
+
+    const num = document.createElement("div");
+    num.className = "day-number";
+    if (isSunday) num.classList.add("sunday");
+    if (isSaturday) num.classList.add("saturday");
+    num.innerText = day;
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+
+    const textarea = document.createElement("textarea");
+    textarea.placeholder = "Note…";
+
+    // Carica stato
+    if (localStorage.getItem(checkKey) === "true") {
+      checkbox.checked = true;
+      div.classList.add("checked");
+    }
+
+    textarea.value = localStorage.getItem(noteKey) || "";
+
+    checkbox.addEventListener("change", () => {
+      localStorage.setItem(checkKey, checkbox.checked);
+      div.classList.toggle("checked");
+    });
+
+    textarea.addEventListener("input", () => {
+      localStorage.setItem(noteKey, textarea.value);
+    });
+
+    top.appendChild(num);
+    top.appendChild(checkbox);
+    div.appendChild(top);
+    div.appendChild(textarea);
+    calendar.appendChild(div);
+  }
+</script>
+
+</body>
+</html>
